@@ -1,10 +1,11 @@
 <?php
-namespace App\Console\Commands;
+namespace Dy\MessageQueue\Commands;
 
 use Dy\MessageQueue\Facade\MQ;
+use Dy\MessageQueue\Message\MessageInterface;
 use Illuminate\Console\Command as BaseCommand;
 
-class MqWorker extends BaseCommand
+class Worker extends BaseCommand
 {
     protected $signature = 'mq:worker {--exchange= : 交换机名称} {--queue= : 队列名称} {--route= : 路由Key}';
 
@@ -18,7 +19,14 @@ class MqWorker extends BaseCommand
     public function handle()
     {
         MQ::consumer(function (string $message) {
-            var_dump($message);
+            $config = config('message_queue');
+            $callback = $config['connections'][$config['driver']]['callback']['general'] ?? '';
+            if ($callback && class_exists($callback)) {
+                $ins = new $callback($message);
+                if ($ins instanceof MessageInterface) {
+                    return $ins->handle();
+                }
+            }
             return true;
         }, $this->option('exchange'), $this->option('queue'), $this->option('route'));
     }

@@ -12,7 +12,11 @@ return [
             'user'      =>  env('MQ_AMQP_USER', 'guest'),
             'password'  =>  env('MQ_AMQP_PASSWORD', 'guest'),
             'vhost'     =>  env('MQ_AMQP_VHOST', '/'),
-            'driver'    =>  Dy\MessageQueue\Driver\AMQP::class
+            'driver'    =>  Dy\MessageQueue\Driver\AMQP::class,
+            'callback'  =>  [
+                'general'   =>  '',
+                'delay'     =>  ''
+            ]
         ],
 
         'redis'     =>  [
@@ -20,7 +24,11 @@ return [
             'port'      =>  env('MQ_REDIS_PORT', 6379),
             'password'  =>  env('MQ_REDIS_PASSWORD', ''),
             'database'  =>  env('MQ_REDIS_DATABASE', 0),
-            'driver'    =>  Dy\MessageQueue\Driver\Redis::class
+            'driver'    =>  Dy\MessageQueue\Driver\Redis::class,
+            'callback'  =>  [
+                'general'   =>  '',
+                'delay'     =>  ''
+            ]
         ]
     ]
 ];
