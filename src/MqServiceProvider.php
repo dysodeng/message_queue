@@ -21,7 +21,7 @@ class MqServiceProvider extends ServiceProvider
             'message_queue'
         );
 
-        $this->app->singleton('mq', function ($app) {
+        $this->app->singleton(MessageQueue::class, function ($app) {
             return new MessageQueue($app);
         });
     }

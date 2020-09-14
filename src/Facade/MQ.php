@@ -23,6 +23,6 @@ class MQ extends Facade
      */
     public static function getFacadeAccessor()
     {
-        return 'mq';
+        return MessageQueue::class;
     }
 }
