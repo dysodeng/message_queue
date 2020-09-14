@@ -1,5 +1,5 @@
 {
-    "name": "dysodeng/mq",
+    "name": "dy/mq",
     "description": "基于Laravel与AMQP的消息队列",
     "type": "library",
     "license": "MIT",
