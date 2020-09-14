@@ -62,10 +62,11 @@ $ php artisan mq:delay_worker --exchange=test.delay.exchange --queue=test.delay.
 发送消息
 ```php
 <?php
+use \Dy\MessageQueue\Facade\MQ;
 
 // 发送普通队列消息
-\Dy\MessageQueue\Facade\MQ::queue('test.exchange', 'test.queue', 'test', 'hello world');
+MQ::queue('test.exchange', 'test.queue', 'test', 'hello world');
 
 // 发送延时队列消息，消息会在10秒后投递到消费者
-\Dy\MessageQueue\Facade\MQ::delayQueue('test.delay.exchange', 'test.delay.queue', 'test.delay', 'hello world', 10);
+MQ::delayQueue('test.delay.exchange', 'test.delay.queue', 'test.delay', 'hello world', 10);
 ```
