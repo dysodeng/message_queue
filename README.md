@@ -4,8 +4,9 @@
 
 1. PHP >= 7.2
 2. **[Composer](https://getcomposer.org/)**
-3. ext-amqp 扩展
-4. ext-redis 扩展
+3. Laravel >= 7.0
+4. ext-amqp 扩展
+5. ext-redis 扩展
 
 ## Installation
 
