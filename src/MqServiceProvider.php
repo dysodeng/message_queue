@@ -1,8 +1,8 @@
 <?php
 namespace Dy\MessageQueue;
 
-use Dy\MessageQueue\Commands\DelayWorker;
-use Dy\MessageQueue\Commands\Worker;
+use App\Console\Commands\MqDelayWorker;
+use App\Console\Commands\MqWorker;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -28,17 +28,23 @@ class MqServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        // 注册命令行
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                Worker::class,
-                DelayWorker::class
-            ]);
-        }
-
         // 配置文件
         $this->publishes([
             __DIR__.'/../config/message_queue.php'  =>  config_path('message_queue.php')
         ]);
+
+        // 命令行文件
+        $this->publishes([
+            __DIR__.'/Commands/MqDelayWorker.php'   =>  app_path('Console/Commands/MqDelayWorker.php'),
+            __DIR__.'/Commands/MqWorker.php'        =>  app_path('Console/Commands/MqWorker.php')
+        ]);
+
+        // 注册命令行
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                MqWorker::class,
+                MqDelayWorker::class
+            ]);
+        }
     }
 }

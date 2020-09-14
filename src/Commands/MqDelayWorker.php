@@ -1,14 +1,14 @@
 <?php
-namespace Dy\MessageQueue\Commands;
+namespace App\Console\Commands;
 
 use Dy\MessageQueue\Facade\MQ;
 use Illuminate\Console\Command as BaseCommand;
 
-class Worker extends BaseCommand
+class MqDelayWorker extends BaseCommand
 {
-    protected $signature = 'mq:worker {--exchange= : 交换机名称} {--queue= : 队列名称} {--route= : 路由Key}';
+    protected $signature = 'mq:delay_worker {--exchange= : 交换机名称} {--queue= : 队列名称} {--route= : 路由Key}';
 
-    protected $description = '运行mq队列消费者';
+    protected $description = '运行mq延时队列消费者';
 
     public function __construct()
     {
@@ -17,7 +17,7 @@ class Worker extends BaseCommand
 
     public function handle()
     {
-        MQ::consumer(function (string $message) {
+        MQ::delayConsumer(function (string $message) {
             var_dump($message);
             return true;
         }, $this->option('exchange'), $this->option('queue'), $this->option('route'));
