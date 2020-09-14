@@ -83,9 +83,4 @@ class Redis implements DriverInterface
     {
         // TODO: Implement consumer() method.
     }
-
-    public function __destruct()
-    {
-
-    }
 }
