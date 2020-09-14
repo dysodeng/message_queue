@@ -1,0 +1,40 @@
+{
+    "name": "dysodeng/mq",
+    "description": "基于Laravel与AMQP的消息队列",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "dysodeng",
+            "email": "dysodengs@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "ext-amqp": "*",
+        "ext-redis": "*",
+        "illuminate/container": "^5.8|^6.0|^7.0",
+        "illuminate/contracts": "^5.8|^6.0|^7.0",
+        "illuminate/support": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dy\\MessageQueue\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Dy\\MessageQueue\\Test\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Dy\\MessageQueue\\MqServiceProvider"
+            ],
+            "aliases": {
+                "MQ": "Dy\\MessageQueue\\Facade\\MQ"
+            }
+        }
+    }
+}
