@@ -134,6 +134,7 @@ class AMQP implements DriverInterface
      * @param string $exchangeName      交换机名称
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key
+     * @param bool $is_delay            是否延时任务
      * @throws AMQPChannelException
      * @throws AMQPConnectionException
      * @throws AMQPExchangeException
@@ -141,7 +142,7 @@ class AMQP implements DriverInterface
      * @throws AMQPQueueException
      * @throws Exception
      */
-    public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
+    public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey, bool $is_delay = false)
     {
         $exchange = new AMQPExchange($this->channel);
         $exchange->setName($exchangeName);

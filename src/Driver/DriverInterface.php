@@ -11,5 +11,5 @@ interface DriverInterface
 
     public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): bool;
 
-    public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey);
+    public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey, bool $is_delay = false);
 }

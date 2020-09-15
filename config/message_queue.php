@@ -24,6 +24,7 @@ return [
             'port'      =>  env('MQ_REDIS_PORT', 6379),
             'password'  =>  env('MQ_REDIS_PASSWORD', ''),
             'database'  =>  env('MQ_REDIS_DATABASE', 0),
+            'max_len'   =>  env('MQ_REDIS_MAX_LEN', 1000), // 队列最大长度，只对普通队列有效
             'driver'    =>  Dy\MessageQueue\Driver\Redis::class,
             'callback'  =>  [
                 'general'   =>  '',

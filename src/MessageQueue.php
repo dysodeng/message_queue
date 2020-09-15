@@ -78,7 +78,7 @@ class MessageQueue
      */
     public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
-        $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey);
+        $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, false);
     }
 
     /**
@@ -90,6 +90,10 @@ class MessageQueue
      */
     public function delayConsumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
-        $this->driver->consumer($consumer, $exchangeName.'.delay', $queueName.'.delay', $routeKey);
+        if (in_array($this->config['driver'], ['amqp'])) {
+            $exchangeName .= '.delay';
+            $queueName .= '.delay';
+        }
+        $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, true);
     }
 }
