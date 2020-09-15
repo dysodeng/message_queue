@@ -48,6 +48,7 @@ return [
             'port'      =>  env('MQ_REDIS_PORT', 6379),
             'password'  =>  env('MQ_REDIS_PASSWORD', ''),
             'database'  =>  env('MQ_REDIS_DATABASE', 0),
+            'max_len'   =>  env('MQ_REDIS_MAX_LEN', 1000),
             'driver'    =>  Dy\MessageQueue\Driver\Redis::class,
             'callback'  =>  [
                 'general'   =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的普通队列消费者回调
