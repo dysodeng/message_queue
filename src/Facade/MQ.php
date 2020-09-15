@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * MQ门面
+ * MQ Facade
  * @package Dy\MessageQueue\Facade
  *
  * @method static MessageQueue queue($exchangeName, $queueName, $routeKey, $message = '')

@@ -83,7 +83,7 @@ class AMQP implements DriverInterface
         $exchange->setType(AMQP_EX_TYPE_DIRECT);
         $exchange->setFlags(AMQP_DURABLE);
         if (!$exchange->declareExchange()) {
-            throw new Exception('交换机声明失败', 1);
+            throw new Exception('exchange declaration failure', 1);
         }
 
         return $exchange->publish($message, $routeKey);
@@ -110,7 +110,7 @@ class AMQP implements DriverInterface
         $exchange->setType(AMQP_EX_TYPE_DIRECT);
         $exchange->setFlags(AMQP_DURABLE);
         if (!$exchange->declareExchange()) {
-            throw new Exception('交换机声明失败', 1);
+            throw new Exception('exchange declaration failure', 1);
         }
 
         $queue = new AMQPQueue($this->channel);
@@ -150,7 +150,7 @@ class AMQP implements DriverInterface
         $exchange->setFlags(AMQP_DURABLE);
 
         if (!$exchange->declareExchange()) {
-            throw new Exception('交换机声明失败', 1);
+            throw new Exception('exchange declaration failure', 1);
         }
 
         $queue = new AMQPQueue($this->channel);

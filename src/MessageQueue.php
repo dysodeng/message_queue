@@ -36,7 +36,7 @@ class MessageQueue
         // 创建连接
         $config = $this->config['connections'][$this->config['driver']] ?? [];
         if (empty($config)) {
-            throw new Exception('mq not found driver on "'.$this->config['driver'].'".');
+            throw new Exception($this->config['driver'].' driver not found.');
         }
 
         $this->driver = new $config['driver']($config);
