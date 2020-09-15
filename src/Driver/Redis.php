@@ -2,6 +2,7 @@
 namespace Dy\MessageQueue\Driver;
 
 use Closure;
+use Dy\MessageQueue\MessageQueue;
 use Exception;
 
 /**
@@ -74,7 +75,7 @@ class Redis implements DriverInterface
         $key = $exchangeName.'.'.$queueName.'.'.$routeKey;
 
         // 生成唯一消息ID
-        $message_id = $this->createMessageId();
+        $message_id = MessageQueue::createMessageId();
 
         $this->conn->hMSet($key.'.payload', [$message_id=>$message]); // 将消息存放于hash中
         $this->conn->zAdd($key, ['NX'], time() + $ttl, $message_id); // 将消息id存于zset中，消费时从zset中取出消息id，再从hash中取出消息
@@ -188,24 +189,4 @@ class Redis implements DriverInterface
         }
     }
 
-    /**
-     * 创建消息ID
-     * @return string
-     */
-    private function createMessageId(): string
-    {
-        $time = microtime(true);
-        $ext = explode('.', $time);
-        if (isset($ext[1])) {
-            $id = $ext[0];
-            if (strlen($ext[1]) < 4) {
-                $id .= $ext[1] . str_repeat(0, (4 - strlen($ext[1])));
-            } else {
-                $id .= substr($ext[1], 0, 4);
-            }
-            return $id.rand(100, 999);
-        } else {
-            return $this->createMessageId();
-        }
-    }
 }

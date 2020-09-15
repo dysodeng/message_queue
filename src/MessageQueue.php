@@ -96,4 +96,25 @@ class MessageQueue
         }
         $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, true);
     }
+
+    /**
+     * 创建消息ID
+     * @return string
+     */
+    public static function createMessageId(): string
+    {
+        $time = microtime(true);
+        $ext = explode('.', $time);
+        if (isset($ext[1])) {
+            $id = $ext[0];
+            if (strlen($ext[1]) < 4) {
+                $id .= $ext[1] . str_repeat(0, (4 - strlen($ext[1])));
+            } else {
+                $id .= substr($ext[1], 0, 4);
+            }
+            return $id.rand(100, 999);
+        } else {
+            return self::createMessageId();
+        }
+    }
 }
