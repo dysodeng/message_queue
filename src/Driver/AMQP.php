@@ -12,6 +12,8 @@ use AMQPExchangeException;
 use AMQPQueue;
 use AMQPQueueException;
 use Closure;
+use Dy\MessageQueue\Message\Id;
+use Dy\MessageQueue\Message\Message;
 use Exception;
 
 /**
@@ -43,14 +45,13 @@ class AMQP implements DriverInterface
     public function __construct(array $config = [])
     {
         $this->config = $config;
-
         $this->connection();
     }
 
     /**
      * @throws AMQPConnectionException
      */
-    public function connection()
+    private function connection()
     {
         $this->conn = new AMQPConnection([
             'host'      =>  $this->config['host'] ?? '',
@@ -70,23 +71,35 @@ class AMQP implements DriverInterface
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key
      * @param string $message           队列消息
-     * @return bool
+     * @return Message
      * @throws AMQPChannelException
      * @throws AMQPConnectionException
      * @throws AMQPExchangeException
      * @throws Exception
      */
-    public function queue(string $exchangeName, string $queueName, string $routeKey, string $message): bool
+    public function queue(string $exchangeName, string $queueName, string $routeKey, string $message): Message
     {
         $exchange = new AMQPExchange($this->channel);
         $exchange->setName($exchangeName);
         $exchange->setType(AMQP_EX_TYPE_DIRECT);
         $exchange->setFlags(AMQP_DURABLE);
         if (!$exchange->declareExchange()) {
-            throw new Exception('exchange declaration failure', 1);
+            throw new Exception('exchange declaration failure');
         }
 
-        return $exchange->publish($message, $routeKey);
+        $message_id = Id::getId();
+
+        if (!$exchange->publish($message, $routeKey, AMQP_NOPARAM, ['message_id'=>$message_id])) {
+            throw new Exception('message publish failure.');
+        }
+
+        return new Message(
+            $message_id,
+            $message,
+            $exchangeName,
+            $queueName,
+            $routeKey
+        );
     }
 
     /**
@@ -95,20 +108,21 @@ class AMQP implements DriverInterface
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key
      * @param string $message           队列消息
-     * @param int $ttl                  消息生存时间(秒)
-     * @return bool
+     * @param int $ttl                  消息延时时间(秒)
+     * @return Message
      * @throws AMQPConnectionException
      * @throws AMQPExchangeException
      * @throws AMQPQueueException
      * @throws AMQPChannelException
      * @throws Exception
      */
-    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): bool
+    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
     {
         $exchange = new AMQPExchange($this->channel);
         $exchange->setName($exchangeName);
-        $exchange->setType(AMQP_EX_TYPE_DIRECT);
+        $exchange->setType('x-delayed-message');
         $exchange->setFlags(AMQP_DURABLE);
+        $exchange->setArgument('x-delayed-type', 'direct');
         if (!$exchange->declareExchange()) {
             throw new Exception('exchange declaration failure', 1);
         }
@@ -116,16 +130,28 @@ class AMQP implements DriverInterface
         $queue = new AMQPQueue($this->channel);
         $queue->setName($queueName);
         $queue->setFlags(AMQP_DURABLE);
-        $queue->setArguments([
-            'x-dead-letter-exchange'    =>  $exchangeName.'.delay',
-            'x-dead-letter-routing-key' =>  $routeKey,
-            'x-message-ttl'             =>  $ttl * 1000
-        ]);
         $queue->declareQueue();
 
         $queue->bind($exchangeName, $routeKey);
 
-        return $exchange->publish($message, $routeKey);
+        $message_id = Id::getId();
+
+        if (!$exchange->publish($message, $routeKey, AMQP_NOPARAM, [
+            'message_id'    =>  $message_id,
+            'headers'       =>  [
+                'x-delay'   =>  $ttl * 1000
+            ]
+        ])) {
+            throw new Exception('message publish failure.');
+        }
+
+        return new Message(
+            $message_id,
+            $message,
+            $exchangeName,
+            $queueName,
+            $routeKey
+        );
     }
 
     /**
@@ -146,7 +172,12 @@ class AMQP implements DriverInterface
     {
         $exchange = new AMQPExchange($this->channel);
         $exchange->setName($exchangeName);
-        $exchange->setType(AMQP_EX_TYPE_DIRECT);
+        if ($is_delay) {
+            $exchange->setType('x-delayed-message');
+            $exchange->setArgument('x-delayed-type','direct');
+        } else {
+            $exchange->setType(AMQP_EX_TYPE_DIRECT);
+        }
         $exchange->setFlags(AMQP_DURABLE);
 
         if (!$exchange->declareExchange()) {
@@ -163,8 +194,15 @@ class AMQP implements DriverInterface
         echo '[*] Waiting for messages. To exit press CTRL+C', "\n";
 
         while (true) {
-            $queue->consume(function (AMQPEnvelope $envelope, AMQPQueue $queue) use ($consumer) {
-                $status = call_user_func($consumer, $envelope->getBody());
+            $queue->consume(function (AMQPEnvelope $envelope, AMQPQueue $queue) use ($consumer, $queueName) {
+                $message = new Message(
+                    $envelope->getMessageId(),
+                    $envelope->getBody(),
+                    $envelope->getExchangeName(),
+                    $queueName,
+                    $envelope->getRoutingKey()
+                );
+                $status = call_user_func($consumer, $message);
                 if ($status === true) {
                     $queue->ack($envelope->getDeliveryTag());
                 }

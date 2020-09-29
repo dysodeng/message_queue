@@ -2,6 +2,7 @@
 namespace Dy\MessageQueue\Commands;
 
 use Dy\MessageQueue\Facade\MQ;
+use Dy\MessageQueue\Message\Message;
 use Dy\MessageQueue\Message\MessageInterface;
 use Illuminate\Console\Command as BaseCommand;
 
@@ -18,7 +19,7 @@ class DelayWorker extends BaseCommand
 
     public function handle()
     {
-        MQ::delayConsumer(function (string $message) {
+        MQ::delayConsumer(function (Message $message) {
             $config = config('message_queue');
             $callback = $config['connections'][$config['driver']]['callback']['delay'] ?? '';
             if ($callback && class_exists($callback)) {

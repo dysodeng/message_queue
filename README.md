@@ -7,6 +7,7 @@
 3. Laravel >= 7.0
 4. ext-amqp 扩展
 5. ext-redis 扩展
+6. 启用amqp时，RabbitMQ需要安装`rabbitmq_delayed_message_exchange`插件
 
 ## Installation
 

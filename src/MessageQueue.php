@@ -1,8 +1,9 @@
 <?php
 namespace Dy\MessageQueue;
 
-use Dy\MessageQueue\Driver\DriverInterface;
 use Closure;
+use Dy\MessageQueue\Driver\DriverInterface;
+use Dy\MessageQueue\Message\Message;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 
@@ -48,9 +49,9 @@ class MessageQueue
      * @param $queueName
      * @param $routeKey
      * @param string $message
-     * @return mixed
+     * @return Message
      */
-    public function queue($exchangeName, $queueName, $routeKey, $message = '')
+    public function queue($exchangeName, $queueName, $routeKey, $message = ''): Message
     {
         return $this->driver->queue($exchangeName, $queueName, $routeKey, $message);
     }
@@ -62,9 +63,9 @@ class MessageQueue
      * @param string $routeKey
      * @param string $message
      * @param int $ttl
-     * @return mixed
+     * @return Message
      */
-    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl)
+    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
     {
         return $this->driver->delayQueue($exchangeName, $queueName, $routeKey, $message, $ttl);
     }
@@ -90,31 +91,6 @@ class MessageQueue
      */
     public function delayConsumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
-        if (in_array($this->config['driver'], ['amqp'])) {
-            $exchangeName .= '.delay';
-            $queueName .= '.delay';
-        }
         $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, true);
-    }
-
-    /**
-     * 创建消息ID
-     * @return string
-     */
-    public static function createMessageId(): string
-    {
-        $time = microtime(true);
-        $ext = explode('.', $time);
-        if (isset($ext[1])) {
-            $id = $ext[0];
-            if (strlen($ext[1]) < 4) {
-                $id .= $ext[1] . str_repeat(0, (4 - strlen($ext[1])));
-            } else {
-                $id .= substr($ext[1], 0, 4);
-            }
-            return $id.rand(100, 999);
-        } else {
-            return self::createMessageId();
-        }
     }
 }

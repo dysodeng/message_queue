@@ -2,7 +2,8 @@
 namespace Dy\MessageQueue\Driver;
 
 use Closure;
-use Dy\MessageQueue\MessageQueue;
+use Dy\MessageQueue\Message\Id;
+use Dy\MessageQueue\Message\Message;
 use Exception;
 
 /**
@@ -33,7 +34,7 @@ class Redis implements DriverInterface
         $this->connection();
     }
 
-    public function connection()
+    private function connection()
     {
         $this->conn = new \Redis();
         $this->conn->connect(
@@ -53,12 +54,20 @@ class Redis implements DriverInterface
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key
      * @param string $message           队列消息
-     * @return bool
+     * @return Message
      */
-    public function queue(string $exchangeName, string $queueName, string $routeKey, string $message): bool
+    public function queue(string $exchangeName, string $queueName, string $routeKey, string $message): Message
     {
         $key = $exchangeName.'.'.$queueName.'.'.$routeKey;
-        return $this->conn->xAdd($key, '*', ['payload'=>$message], $this->config['max_len']) ? true : false;
+        $messageId = $this->conn->xAdd($key, '*', ['payload'=>$message], $this->config['max_len']);
+
+        return new Message(
+            $messageId,
+            $message,
+            $exchangeName,
+            $queueName,
+            $routeKey
+        );
     }
 
     /**
@@ -68,19 +77,25 @@ class Redis implements DriverInterface
      * @param string $routeKey          路由key
      * @param string $message           队列消息
      * @param int $ttl                  消息生存时间(秒)
-     * @return bool
+     * @return Message
      */
-    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): bool
+    public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
     {
         $key = $exchangeName.'.'.$queueName.'.'.$routeKey;
 
         // 生成唯一消息ID
-        $message_id = MessageQueue::createMessageId();
+        $message_id = Id::getId();
 
         $this->conn->hMSet($key.'.payload', [$message_id=>$message]); // 将消息存放于hash中
         $this->conn->zAdd($key, ['NX'], time() + $ttl, $message_id); // 将消息id存于zset中，消费时从zset中取出消息id，再从hash中取出消息
 
-        return true;
+        return new Message(
+            $message_id,
+            $message,
+            $exchangeName,
+            $queueName,
+            $routeKey
+        );
     }
 
     /**
@@ -120,7 +135,13 @@ class Redis implements DriverInterface
 
                                 // 取出消息内容
                                 $message = $this->conn->hGet($queueKey.'.payload', $message_id);
-                                $status = call_user_func($consumer, $message);
+                                $status = call_user_func($consumer, new Message(
+                                    $message_id,
+                                    $message,
+                                    $exchangeName,
+                                    $queueName,
+                                    $routeKey
+                                ));
                                 if ($status === true) {
                                     $this->conn->zRem($queueKey, $message_id);
                                     $this->conn->hDel($queueKey.'.payload', $message_id);
@@ -172,7 +193,13 @@ class Redis implements DriverInterface
                                 echo '[*] test for messages.', "\n";
                                 $this->conn->xAck($queueKey, $exchangeName, [$message['message_id']]);
                             } else {
-                                $status = call_user_func($consumer, $message['payload']);
+                                $status = call_user_func($consumer, new Message(
+                                    $message['message_id'],
+                                    $message['payload'],
+                                    $exchangeName,
+                                    $queueName,
+                                    $routeKey
+                                ));
                                 if ($status === true) {
                                     $this->conn->xAck($queueKey, $exchangeName, [$message['message_id']]);
                                 } else {
