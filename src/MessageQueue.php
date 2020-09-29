@@ -53,7 +53,7 @@ class MessageQueue
         $config['retry'] = intval($this->config['retry'] ?? 3); // 重试次数
 
         // 创建队列驱动
-        switch (strtolower($config['driver'])) {
+        switch (strtolower($this->config['driver'])) {
             case 'amqp':
                 $this->driver = new AMQP($config);
                 break;
