@@ -2,7 +2,9 @@
 namespace Dy\MessageQueue;
 
 use Closure;
+use Dy\MessageQueue\Driver\AMQP;
 use Dy\MessageQueue\Driver\DriverInterface;
+use Dy\MessageQueue\Driver\Redis;
 use Dy\MessageQueue\Log\Log;
 use Dy\MessageQueue\Message\Message;
 use Exception;
@@ -51,7 +53,16 @@ class MessageQueue
         $config['retry'] = intval($this->config['retry'] ?? 3); // 重试次数
 
         // 创建队列驱动
-        $this->driver = new $config['driver']($config);
+        switch (strtolower($config['driver'])) {
+            case 'amqp':
+                $this->driver = new AMQP($config);
+                break;
+            case 'redis':
+                $this->driver = new Redis($config);
+                break;
+            default:
+                throw new Exception($this->config['driver'].' driver not found.');
+        }
 
         // 日志
         $this->config['log'] = $this->config['log'] ?? ['level'=>'debug', 'file'=>storage_path('logs/dy_message_queue.log')];

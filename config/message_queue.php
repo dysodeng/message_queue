@@ -12,7 +12,6 @@ return [
             'user'      =>  env('MQ_AMQP_USER', 'guest'),
             'password'  =>  env('MQ_AMQP_PASSWORD', 'guest'),
             'vhost'     =>  env('MQ_AMQP_VHOST', '/'),
-            'driver'    =>  Dy\MessageQueue\Driver\AMQP::class
         ],
 
         'redis'     =>  [
@@ -21,7 +20,6 @@ return [
             'password'  =>  env('MQ_REDIS_PASSWORD', ''),
             'database'  =>  env('MQ_REDIS_DATABASE', 0),
             'max_len'   =>  env('MQ_REDIS_MAX_LEN', 1000), // 队列最大长度，只对普通队列有效
-            'driver'    =>  Dy\MessageQueue\Driver\Redis::class
         ]
     ],
 
