@@ -5,6 +5,7 @@ use Closure;
 use Dy\MessageQueue\Message\Id;
 use Dy\MessageQueue\Message\Message;
 use Exception;
+use Monolog\Logger;
 
 /**
  * 消息队列 Redis驱动实现
@@ -23,6 +24,16 @@ class Redis implements DriverInterface
      * @var \Redis
      */
     private $conn;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * @var array
+     */
+    private $retry_message_count = [];
 
     /**
      * Redis constructor.
@@ -46,6 +57,14 @@ class Redis implements DriverInterface
             $this->conn->auth($password);
         }
         $this->conn->select($this->config['database'] ?? 0);
+    }
+
+    /**
+     * @param Logger $logger
+     */
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -148,7 +167,25 @@ class Redis implements DriverInterface
                                     $this->conn->sRem($queueKey.'.ack', $message_id);
                                 } else {
                                     // 消息重试
-                                    $this->conn->sRem($queueKey.'.ack', $message_id);
+                                    $mark = $exchangeName.$queueName.$routeKey.$message_id;
+                                    $count = $this->getRetryCount($mark);
+                                    if ($count < $this->config['retry']) {
+                                        $this->conn->sRem($queueKey.'.ack', $message_id);
+                                        echo '[MessageId: '.$message_id.']消息重试中...', "\n";
+                                    } else {
+                                        $this->conn->zRem($queueKey, $message_id);
+                                        $this->conn->hDel($queueKey.'.payload', $message_id);
+                                        $this->conn->sRem($queueKey.'.ack', $message_id);
+
+                                        echo '[MessageId: '.$message_id.']'.'消息处理失败', "\n";
+                                        $this->logger->error('消息处理失败', [
+                                            'ExchangeName'  =>  $exchangeName,
+                                            'QueueName'     =>  $queueName,
+                                            'RouteKey'      =>  $routeKey,
+                                            'MessageId'     =>  $message_id,
+                                            'Body'          =>  $message
+                                        ]);
+                                    }
                                 }
                                 $offset = 0;
                             } else {
@@ -161,7 +198,7 @@ class Redis implements DriverInterface
                 } catch (Exception $exception) {
                     // 消息重试
                     $this->conn->sRem($queueKey.'.ack', $message_id);
-                    logs()->info('redis队列消费者异常：'.$exception->getMessage());
+                    $this->logger->error('redis队列消费者异常：'.$exception->getMessage());
                 }
             }
 
@@ -214,6 +251,30 @@ class Redis implements DriverInterface
                 }
             }
         }
+    }
+
+    /**
+     * 获取消息重试次数
+     * @param string $mark
+     * @param bool $is_clear
+     * @return int
+     */
+    private function getRetryCount($mark, $is_clear = false): int
+    {
+        $count = 0;
+        if (isset($this->retry_message_count[$mark])) {
+            $count = $this->retry_message_count[$mark];
+        } else {
+            $this->retry_message_count[$mark] = 0;
+        }
+
+        $this->retry_message_count[$mark] += 1;
+
+        if ($is_clear) {
+            unset($this->retry_message_count[$mark]);
+        }
+
+        return $count;
     }
 
 }

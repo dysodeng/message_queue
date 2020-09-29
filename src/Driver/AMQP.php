@@ -15,6 +15,7 @@ use Closure;
 use Dy\MessageQueue\Message\Id;
 use Dy\MessageQueue\Message\Message;
 use Exception;
+use Monolog\Logger;
 
 /**
  * 消息队列 AMQP驱动实现
@@ -36,6 +37,16 @@ class AMQP implements DriverInterface
      * @var AMQPChannel
      */
     private $channel;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * @var array
+     */
+    private $retry_message_count = [];
 
     /**
      * AMQP constructor.
@@ -63,6 +74,14 @@ class AMQP implements DriverInterface
 
         $this->conn->connect();
         $this->channel = new AMQPChannel($this->conn);
+    }
+
+    /**
+     * @param Logger $logger
+     */
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -164,7 +183,6 @@ class AMQP implements DriverInterface
      * @throws AMQPChannelException
      * @throws AMQPConnectionException
      * @throws AMQPExchangeException
-     * @throws AMQPEnvelopeException
      * @throws AMQPQueueException
      * @throws Exception
      */
@@ -174,7 +192,7 @@ class AMQP implements DriverInterface
         $exchange->setName($exchangeName);
         if ($is_delay) {
             $exchange->setType('x-delayed-message');
-            $exchange->setArgument('x-delayed-type','direct');
+            $exchange->setArgument('x-delayed-type', 'direct');
         } else {
             $exchange->setType(AMQP_EX_TYPE_DIRECT);
         }
@@ -194,20 +212,96 @@ class AMQP implements DriverInterface
         echo '[*] Waiting for messages. To exit press CTRL+C', "\n";
 
         while (true) {
-            $queue->consume(function (AMQPEnvelope $envelope, AMQPQueue $queue) use ($consumer, $queueName) {
-                $message = new Message(
-                    $envelope->getMessageId(),
-                    $envelope->getBody(),
-                    $envelope->getExchangeName(),
-                    $queueName,
-                    $envelope->getRoutingKey()
-                );
-                $status = call_user_func($consumer, $message);
-                if ($status === true) {
-                    $queue->ack($envelope->getDeliveryTag());
+
+            try {
+                $queue->consume(function (AMQPEnvelope $envelope, AMQPQueue $queue) use ($consumer, $queueName) {
+                    $message = new Message(
+                        $envelope->getMessageId(),
+                        $envelope->getBody(),
+                        $envelope->getExchangeName(),
+                        $queueName,
+                        $envelope->getRoutingKey()
+                    );
+                    $status = call_user_func($consumer, $message);
+                    if ($status === true) {
+
+                        // 消息确认
+                        $queue->ack($envelope->getDeliveryTag());
+
+                    } else {
+
+                        // 消息重试
+                        $mark = $envelope->getExchangeName().$queueName.$envelope->getRoutingKey().$envelope->getMessageId();
+                        $count = $this->getRetryCount($mark);
+
+                        if ($count < $this->config['retry']) {
+                            $queue->nack($envelope->getDeliveryTag(), AMQP_REQUEUE);
+                            echo '[MessageId: '.$envelope->getMessageId().']消息重试中...', "\n";
+                        } else {
+                            // 消息异常处理
+                            $this->getRetryCount($mark, true);
+                            $queue->ack($envelope->getDeliveryTag());
+
+                            echo '[MessageId: '.$envelope->getMessageId().']'.'消息处理失败', "\n";
+                            $this->logger->error('消息处理失败', [
+                                'ExchangeName'  =>  $envelope->getExchangeName(),
+                                'QueueName'     =>  $queueName,
+                                'RouteKey'      =>  $envelope->getRoutingKey(),
+                                'MessageId'     =>  $envelope->getMessageId(),
+                                'Body'          =>  $envelope->getBody()
+                            ]);
+                        }
+                    }
+                });
+            }
+            catch (AMQPEnvelopeException $exception) {
+                // 消息重试
+                $mark = $exception->envelope->getExchangeName().$queueName.$exception->envelope->getRoutingKey().$exception->envelope->getMessageId();
+                $count = $this->getRetryCount($mark);
+
+                if ($count < $this->config['retry']) {
+                    $queue->nack($exception->envelope->getDeliveryTag(), AMQP_REQUEUE);
+                    echo '[MessageId: '.$exception->envelope->getMessageId().']消息重试中...', "\n";
+                } else {
+                    // 消息异常处理
+                    $this->getRetryCount($mark, true);
+                    $queue->ack($exception->envelope->getDeliveryTag());
+
+                    echo '[MessageId: '.$exception->envelope->getMessageId().']'.'消息处理失败', "\n";
+                    $this->logger->error('消息处理失败', [
+                        'ExchangeName'  =>  $exception->envelope->getExchangeName(),
+                        'QueueName'     =>  $queueName,
+                        'RouteKey'      =>  $exception->envelope->getRoutingKey(),
+                        'MessageId'     =>  $exception->envelope->getMessageId(),
+                        'Body'          =>  $exception->envelope->getBody()
+                    ]);
                 }
-            });
+            }
         }
+    }
+
+    /**
+     * 获取消息重试次数
+     * @param string $mark
+     * @param bool $is_clear
+     * @return int
+     */
+    private function getRetryCount($mark, $is_clear = false): int
+    {
+        $count = 0;
+        if (isset($this->retry_message_count[$mark])) {
+            $count = $this->retry_message_count[$mark];
+        } else {
+            $this->retry_message_count[$mark] = 0;
+        }
+
+        $this->retry_message_count[$mark] += 1;
+
+        if ($is_clear) {
+            unset($this->retry_message_count[$mark]);
+        }
+
+        return $count;
     }
 
     public function __destruct()

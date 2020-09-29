@@ -3,9 +3,13 @@ namespace Dy\MessageQueue;
 
 use Closure;
 use Dy\MessageQueue\Driver\DriverInterface;
+use Dy\MessageQueue\Log\Log;
 use Dy\MessageQueue\Message\Message;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class MessageQueue
 {
@@ -25,6 +29,11 @@ class MessageQueue
     private $driver;
 
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * MessageQueue constructor.
      * @param Application $app
      * @throws Exception
@@ -39,8 +48,28 @@ class MessageQueue
         if (empty($config)) {
             throw new Exception($this->config['driver'].' driver not found.');
         }
+        $config['retry'] = intval($this->config['retry'] ?? 3); // 重试次数
 
+        // 创建队列驱动
         $this->driver = new $config['driver']($config);
+
+        // 日志
+        $this->config['log'] = $this->config['log'] ?? ['level'=>'debug', 'file'=>storage_path('logs/dy_message_queue.log')];
+        $logger = new Logger('MessageQueue');
+        $stream = new StreamHandler($this->config['log']['file'], Log::getLevel($this->config['log']['level']));
+        $stream->setFormatter(new LineFormatter(null, 'Y-m-d H:i:s', true, true));
+        $logger->pushHandler($stream);
+
+        $this->setLogger($logger);
+    }
+
+    /**
+     * @param Logger $logger
+     */
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
+        $this->driver->setLogger($logger);
     }
 
     /**

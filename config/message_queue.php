@@ -26,4 +26,11 @@ return [
     ],
 
     'callback'      =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的队列消费者回调，用于对接业务逻辑
+
+    'retry'         =>  3,  // 消息失败重试次数
+
+    'log'           =>  [   // 日志
+        'level'     =>  'debug',
+        'file'      =>  storage_path('logs/dy_message_queue.log')
+    ],
 ];

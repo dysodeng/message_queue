@@ -3,10 +3,13 @@ namespace Dy\MessageQueue\Driver;
 
 use Closure;
 use Dy\MessageQueue\Message\Message;
+use Monolog\Logger;
 
 interface DriverInterface
 {
     public function __construct(array $config = []);
+
+    public function setLogger(Logger $logger);
 
     public function queue(string $exchangeName, string $queueName, string $routeKey, string $message): Message;
 
