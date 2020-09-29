@@ -3,13 +3,13 @@ namespace Dy\MessageQueue;
 
 use Dy\MessageQueue\Commands\DelayWorker;
 use Dy\MessageQueue\Commands\Worker;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\ServiceProvider as Provider;
 
 /**
- * MqServiceProvider
+ * ServiceProvider
  * @package Dy\MessageQueue
  */
-class MqServiceProvider extends ServiceProvider
+class ServiceProvider extends Provider
 {
     /**
      * 注册服务

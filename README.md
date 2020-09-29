@@ -17,7 +17,7 @@ $ composer require "dy/mq"
 
 安装完成后，发布配置文件
 ```shell
-$ php artisan vendor:publish # 选择 Provider: Dy\MessageQueue\MqServiceProvider
+$ php artisan vendor:publish # 选择 Provider: Dy\MessageQueue\ServiceProvider
 ```
 
 ## Usage
