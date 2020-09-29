@@ -18,7 +18,7 @@ class Id
             } else {
                 $id .= substr($ext[1], 0, 4);
             }
-            return $id.rand(100000, 999999);
+            return $id.mt_rand(100000, 999999);
         } else {
             return self::getId();
         }
