@@ -21,7 +21,7 @@ class DelayWorker extends BaseCommand
     {
         MQ::delayConsumer(function (Message $message) {
             $config = config('message_queue');
-            $callback = $config['connections'][$config['driver']]['callback']['delay'] ?? '';
+            $callback = $config['callback'] ?? '';
             if ($callback && class_exists($callback)) {
                 $ins = new $callback($message);
                 if ($ins instanceof MessageInterface) {

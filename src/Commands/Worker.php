@@ -21,7 +21,7 @@ class Worker extends BaseCommand
     {
         MQ::consumer(function (Message $message) {
             $config = config('message_queue');
-            $callback = $config['connections'][$config['driver']]['callback']['general'] ?? '';
+            $callback = $config['callback'] ?? '';
             if ($callback && class_exists($callback)) {
                 $ins = new $callback($message);
                 if ($ins instanceof MessageInterface) {

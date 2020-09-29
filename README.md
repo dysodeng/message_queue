@@ -37,11 +37,7 @@ return [
             'user'      =>  env('MQ_AMQP_USER', 'guest'),
             'password'  =>  env('MQ_AMQP_PASSWORD', 'guest'),
             'vhost'     =>  env('MQ_AMQP_VHOST', '/'),
-            'driver'    =>  Dy\MessageQueue\Driver\AMQP::class,
-            'callback'  =>  [
-                'general'   =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的普通队列消费者回调
-                'delay'     =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的延时队列消费者回调
-            ]
+            'driver'    =>  Dy\MessageQueue\Driver\AMQP::class
         ],
         // Redis驱动
         'redis'     =>  [
@@ -50,13 +46,11 @@ return [
             'password'  =>  env('MQ_REDIS_PASSWORD', ''),
             'database'  =>  env('MQ_REDIS_DATABASE', 0),
             'max_len'   =>  env('MQ_REDIS_MAX_LEN', 1000),
-            'driver'    =>  Dy\MessageQueue\Driver\Redis::class,
-            'callback'  =>  [
-                'general'   =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的普通队列消费者回调
-                'delay'     =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的延时队列消费者回调
-            ]
+            'driver'    =>  Dy\MessageQueue\Driver\Redis::class
         ]
-    ]
+    ],
+
+    'callback'      =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的队列消费者回调，用于对接业务逻辑
 ];
 ```
 
