@@ -69,7 +69,7 @@ $ php artisan mq:delay_worker --exchange=test.delay.exchange --queue=test.delay.
 <?php
 use \Dy\MessageQueue\Facade\MQ;
 
-// 发送普通队列消息
+// 发送普通队列消息，消息将被立即投递到消费者
 MQ::queue('test.exchange', 'test.queue', 'test', 'hello world');
 
 // 发送延时队列消息，消息会在10秒后投递到消费者
