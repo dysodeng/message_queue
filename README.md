@@ -25,6 +25,7 @@ $ php artisan vendor:publish
 配置文件
 ```php
 <?php
+// config/message_queue.php
 return [
     // 默认MQ驱动，与connections对应
     'driver'        =>  env('MQ_DRIVER', 'amqp'),
