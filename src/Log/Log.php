@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue\Log;
 
 use Monolog\Logger as Monolog;

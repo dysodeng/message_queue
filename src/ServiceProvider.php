@@ -22,7 +22,7 @@ class ServiceProvider extends Provider
         );
 
         $this->app->singleton(MessageQueue::class, function ($app) {
-            return new MessageQueue($app);
+            return new MessageQueue($app['config']['message_queue']);
         });
     }
 

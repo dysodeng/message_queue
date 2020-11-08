@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue\Driver;
 
 use Closure;
@@ -131,7 +132,6 @@ class Redis implements DriverInterface
         $this->conn->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
         if ($is_delay) {
-
             $queueKey = $exchangeName.'.'.$queueName.'.'.$routeKey;
 
             echo '[*] Waiting for messages. To exit press CTRL+C', "\n";
@@ -141,14 +141,11 @@ class Redis implements DriverInterface
             while (true) {
                 $message_id = '';
                 try {
-
                     $result = $this->conn->zRangeByScore($queueKey, 0, time(), ['withscores'=>true, 'limit'=>[$offset, 1]]); // 取一条
                     if ($result) {
-
                         $keys = array_keys($result);
                         $message_id = array_pop($keys);
                         if ($message_id) {
-
                             if (!$this->conn->sIsMember($queueKey.'.ack', $message_id)) {
                                 $this->conn->sAdd($queueKey.'.ack', $message_id);
 
@@ -169,21 +166,25 @@ class Redis implements DriverInterface
                                     // 消息重试
                                     $mark = $exchangeName.$queueName.$routeKey.$message_id;
                                     $count = $this->getRetryCount($mark);
+
+                                    $time = date('Y-m-d H:i:s');
+
                                     if ($count < $this->config['retry']) {
                                         $this->conn->sRem($queueKey.'.ack', $message_id);
-                                        echo '[MessageId: '.$message_id.']消息重试中...', "\n";
+                                        echo '[Time: '.$time.' MessageId: '.$message_id.']消息重试中...', "\n";
                                     } else {
                                         $this->conn->zRem($queueKey, $message_id);
                                         $this->conn->hDel($queueKey.'.payload', $message_id);
                                         $this->conn->sRem($queueKey.'.ack', $message_id);
 
-                                        echo '[MessageId: '.$message_id.']'.'消息处理失败', "\n";
+                                        echo '[Time: '.$time.' MessageId: '.$message_id.']'.'消息处理失败', "\n";
                                         $this->logger->error('消息处理失败', [
                                             'ExchangeName'  =>  $exchangeName,
                                             'QueueName'     =>  $queueName,
                                             'RouteKey'      =>  $routeKey,
                                             'MessageId'     =>  $message_id,
-                                            'Body'          =>  $message
+                                            'Body'          =>  $message,
+                                            'Time'          =>  $time,
                                         ]);
                                     }
                                 }
@@ -192,18 +193,14 @@ class Redis implements DriverInterface
                                 $offset += 1;
                             }
                         }
-
                     }
-
                 } catch (Exception $exception) {
                     // 消息重试
                     $this->conn->sRem($queueKey.'.ack', $message_id);
                     $this->logger->error('redis队列消费者异常：'.$exception->getMessage());
                 }
             }
-
         } else {
-
             $queueKey = $exchangeName.'.'.$queueName.'.'.$routeKey;
 
             // 创建消息组，把交换机当作消息组名称
@@ -247,7 +244,7 @@ class Redis implements DriverInterface
                     }
                 } catch (Exception $exception) {
                     // TODO 消息重试
-                    logs()->info('redis队列消费者异常：'.$exception->getMessage());
+                    $this->logger->info('redis队列消费者异常：'.$exception->getMessage());
                 }
             }
         }
@@ -276,5 +273,4 @@ class Redis implements DriverInterface
 
         return $count;
     }
-
 }

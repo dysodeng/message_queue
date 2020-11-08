@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue\Message;
 
 class Id

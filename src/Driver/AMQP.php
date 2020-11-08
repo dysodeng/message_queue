@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue\Driver;
 
 use AMQPChannel;
@@ -212,7 +213,6 @@ class AMQP implements DriverInterface
         echo '[*] Waiting for messages. To exit press CTRL+C', "\n";
 
         while (true) {
-
             try {
                 $queue->consume(function (AMQPEnvelope $envelope, AMQPQueue $queue) use ($consumer, $queueName) {
                     $message = new Message(
@@ -227,53 +227,57 @@ class AMQP implements DriverInterface
 
                         // 消息确认
                         $queue->ack($envelope->getDeliveryTag());
-
                     } else {
 
                         // 消息重试
                         $mark = $envelope->getExchangeName().$queueName.$envelope->getRoutingKey().$envelope->getMessageId();
                         $count = $this->getRetryCount($mark);
 
+                        $time = date('Y-m-d H:i:s');
+
                         if ($count < $this->config['retry']) {
                             $queue->nack($envelope->getDeliveryTag(), AMQP_REQUEUE);
-                            echo '[MessageId: '.$envelope->getMessageId().']消息重试中...', "\n";
+                            echo '[Time: '.$time.' MessageId: '.$envelope->getMessageId().']消息重试中...', "\n";
                         } else {
                             // 消息异常处理
                             $this->getRetryCount($mark, true);
                             $queue->ack($envelope->getDeliveryTag());
 
-                            echo '[MessageId: '.$envelope->getMessageId().']'.'消息处理失败', "\n";
+                            echo '[Time: '.$time.' MessageId: '.$envelope->getMessageId().']'.'消息处理失败', "\n";
                             $this->logger->error('消息处理失败', [
                                 'ExchangeName'  =>  $envelope->getExchangeName(),
                                 'QueueName'     =>  $queueName,
                                 'RouteKey'      =>  $envelope->getRoutingKey(),
                                 'MessageId'     =>  $envelope->getMessageId(),
-                                'Body'          =>  $envelope->getBody()
+                                'Body'          =>  $envelope->getBody(),
+                                'Time'          =>  $time,
                             ]);
                         }
                     }
                 });
-            }
-            catch (AMQPEnvelopeException $exception) {
+            } catch (AMQPEnvelopeException $exception) {
                 // 消息重试
                 $mark = $exception->envelope->getExchangeName().$queueName.$exception->envelope->getRoutingKey().$exception->envelope->getMessageId();
                 $count = $this->getRetryCount($mark);
 
+                $time = date('Y-m-d H:i:s');
+
                 if ($count < $this->config['retry']) {
                     $queue->nack($exception->envelope->getDeliveryTag(), AMQP_REQUEUE);
-                    echo '[MessageId: '.$exception->envelope->getMessageId().']消息重试中...', "\n";
+                    echo '[Time: '.$time.' MessageId: '.$exception->envelope->getMessageId().']消息重试中...', "\n";
                 } else {
                     // 消息异常处理
                     $this->getRetryCount($mark, true);
                     $queue->ack($exception->envelope->getDeliveryTag());
 
-                    echo '[MessageId: '.$exception->envelope->getMessageId().']'.'消息处理失败', "\n";
+                    echo '[Time: '.$time.' MessageId: '.$exception->envelope->getMessageId().']'.'消息处理失败', "\n";
                     $this->logger->error('消息处理失败', [
                         'ExchangeName'  =>  $exception->envelope->getExchangeName(),
                         'QueueName'     =>  $queueName,
                         'RouteKey'      =>  $exception->envelope->getRoutingKey(),
                         'MessageId'     =>  $exception->envelope->getMessageId(),
-                        'Body'          =>  $exception->envelope->getBody()
+                        'Body'          =>  $exception->envelope->getBody(),
+                        'Time'          =>  $time,
                     ]);
                 }
             }

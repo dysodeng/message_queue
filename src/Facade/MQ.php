@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue\Facade;
 
 use Dy\MessageQueue\Message\Message;

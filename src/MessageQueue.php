@@ -1,4 +1,5 @@
 <?php
+
 namespace Dy\MessageQueue;
 
 use Closure;
@@ -8,18 +9,12 @@ use Dy\MessageQueue\Driver\Redis;
 use Dy\MessageQueue\Log\Log;
 use Dy\MessageQueue\Message\Message;
 use Exception;
-use Illuminate\Contracts\Foundation\Application;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
 class MessageQueue
 {
-    /**
-     * @var Application
-     */
-    private $app;
-
     /**
      * @var array
      */
@@ -37,13 +32,12 @@ class MessageQueue
 
     /**
      * MessageQueue constructor.
-     * @param Application $app
+     * @param array $config
      * @throws Exception
      */
-    public function __construct(Application $app)
+    public function __construct(array $config)
     {
-        $this->app = $app;
-        $this->config = $this->app['config']['message_queue'];
+        $this->config = $config;
 
         // 创建连接
         $config = $this->config['connections'][$this->config['driver']] ?? [];
