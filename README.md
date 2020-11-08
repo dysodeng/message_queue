@@ -22,6 +22,32 @@ $ php artisan vendor:publish # 选择 Provider: Dy\MessageQueue\ServiceProvider
 
 ## Usage
 
+消息处理器
+```php
+<?php
+
+use Dy\MessageQueue\Message\Message;
+use Dy\MessageQueue\Message\MessageProcessorInterface;
+
+class DemoMessageProcessor implements MessageProcessorInterface
+{
+    public function handle(Message $message): bool
+    {
+        var_dump($message->getData());
+        return true;
+    }
+}
+
+class DemoDelayMessageProcessor implements MessageProcessorInterface
+{
+    public function handle(Message $message): bool
+    {
+        var_dump($message->getData());
+        return true;
+    }
+}
+```
+
 配置文件
 ```php
 <?php
@@ -49,7 +75,10 @@ return [
         ]
     ],
 
-    'callback'      =>  '', // 实现 Dy\MessageQueue\Message\MessageInterface 接口的队列消费者回调，用于对接业务逻辑
+    'processor'     =>  [ // 实现 Dy\MessageQueue\Message\MessageProcessorInterface 接口的队列消费者处理器，用于对接业务逻辑
+        'demo'      =>  DemoMessageProcessor::class,
+        'demo.delay'=>  DemoDelayMessageProcessor::class,
+    ],
     
     'retry'         =>  3,  // 消息失败重试次数
 
@@ -63,11 +92,11 @@ return [
 运行列队消费者
 ```shell
 # 普通队列消费者
-$ php artisan mq:worker --exchange=test.exchange --queue=test.queue --route=test
+$ php artisan mq:worker --exchange=test.exchange --queue=test.queue --route=test --processor=demo
 ```
 ```shell
 # 延时队列消费者
-$ php artisan mq:delay_worker --exchange=test.delay.exchange --queue=test.delay.queue --route=test.delay
+$ php artisan mq:delay_worker --exchange=test.delay.exchange --queue=test.delay.queue --route=test.delay --processor=demo.delay
 ```
 
 发送消息

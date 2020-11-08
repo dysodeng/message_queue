@@ -78,6 +78,7 @@ class AMQP implements DriverInterface
     }
 
     /**
+     * 设置日志处理器
      * @param Logger $logger
      */
     public function setLogger(Logger $logger)
@@ -86,7 +87,7 @@ class AMQP implements DriverInterface
     }
 
     /**
-     * 队列消息
+     * 发送普通队列消息
      * @param string $exchangeName      交换机名称
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key
@@ -123,7 +124,7 @@ class AMQP implements DriverInterface
     }
 
     /**
-     * 延时队列消息
+     * 发送延时队列消息
      * @param string $exchangeName      交换机名称
      * @param string $queueName         队列名称
      * @param string $routeKey          路由key

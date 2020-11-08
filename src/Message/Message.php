@@ -94,4 +94,19 @@ class Message
     {
         return $this->body;
     }
+
+    /**
+     * 获取消息体数据
+     * @return array
+     */
+    public function getData(): array
+    {
+        return [
+            'id'            =>  $this->getId(),
+            'body'          =>  $this->getBody(),
+            'exchange_name' =>  $this->getExchangeName(),
+            'queue_name'    =>  $this->getQueueName(),
+            'route_key'     =>  $this->getRouteKey(),
+        ];
+    }
 }

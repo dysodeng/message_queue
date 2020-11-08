@@ -3,12 +3,16 @@ namespace Dy\MessageQueue\Commands;
 
 use Dy\MessageQueue\Facade\MQ;
 use Dy\MessageQueue\Message\Message;
-use Dy\MessageQueue\Message\MessageInterface;
+use Dy\MessageQueue\Message\MessageProcessorInterface;
 use Illuminate\Console\Command as BaseCommand;
 
+/**
+ * 普通队列工作处理器
+ * @package Dy\MessageQueue\Commands
+ */
 class Worker extends BaseCommand
 {
-    protected $signature = 'mq:worker {--exchange= : 交换机名称} {--queue= : 队列名称} {--route= : 路由Key}';
+    protected $signature = 'mq:worker {--exchange= : 交换机名称} {--queue= : 队列名称} {--route= : 路由Key} {--processor= : 消息处理器}';
 
     protected $description = '运行mq队列消费者';
 
@@ -21,11 +25,14 @@ class Worker extends BaseCommand
     {
         MQ::consumer(function (Message $message) {
             $config = config('message_queue');
-            $callback = $config['callback'] ?? '';
-            if ($callback && class_exists($callback)) {
-                $ins = new $callback($message);
-                if ($ins instanceof MessageInterface) {
-                    return $ins->handle();
+            $processor_list = $config['processor'] ?? [];
+            $processor = $this->option('processor') ?? '';
+            if (isset($processor_list[$processor])) {
+                if ($processor_list[$processor] && class_exists($processor_list[$processor])) {
+                    $ins = new $processor_list[$processor]();
+                    if ($ins instanceof MessageProcessorInterface) {
+                        return $ins->handle($message);
+                    }
                 }
             }
             return true;

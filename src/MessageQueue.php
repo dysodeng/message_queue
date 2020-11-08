@@ -78,25 +78,25 @@ class MessageQueue
     }
 
     /**
-     * 队列消息
-     * @param $exchangeName
-     * @param $queueName
-     * @param $routeKey
-     * @param string $message
+     * 发送普通队列消息
+     * @param string $exchangeName  交换机名称
+     * @param string $queueName     队列名称
+     * @param string $routeKey      路由key
+     * @param string $message       队列消息
      * @return Message
      */
-    public function queue($exchangeName, $queueName, $routeKey, $message = ''): Message
+    public function queue(string $exchangeName, string $queueName, string $routeKey, string $message = ''): Message
     {
         return $this->driver->queue($exchangeName, $queueName, $routeKey, $message);
     }
 
     /**
-     * 延时队列消息
-     * @param string $exchangeName
-     * @param string $queueName
-     * @param string $routeKey
-     * @param string $message
-     * @param int $ttl
+     * 发送延时队列消息
+     * @param string $exchangeName  交换机名称
+     * @param string $queueName     队列名称
+     * @param string $routeKey      路由key
+     * @param string $message       队列消息
+     * @param int $ttl              消息延时时间(秒)
      * @return Message
      */
     public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
