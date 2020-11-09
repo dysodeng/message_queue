@@ -23,6 +23,8 @@ return [
         ]
     ],
 
+    'prefix'        =>  '', // key前缀
+
     'processor'     =>  [], // 实现 Dy\MessageQueue\Message\MessageProcessorInterface 接口的队列消费者处理器，用于对接业务逻辑
 
     'retry'         =>  3,  // 消息失败重试次数

@@ -87,7 +87,8 @@ class MessageQueue
      */
     public function queue(string $exchangeName, string $queueName, string $routeKey, string $message = ''): Message
     {
-        return $this->driver->queue($exchangeName, $queueName, $routeKey, $message);
+        $prefix = $this->getPrefix();
+        return $this->driver->queue($prefix.$exchangeName, $prefix.$queueName, $routeKey, $message);
     }
 
     /**
@@ -101,7 +102,8 @@ class MessageQueue
      */
     public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
     {
-        return $this->driver->delayQueue($exchangeName, $queueName, $routeKey, $message, $ttl);
+        $prefix = $this->getPrefix();
+        return $this->driver->delayQueue($prefix.$exchangeName, $prefix.$queueName, $routeKey, $message, $ttl);
     }
 
     /**
@@ -113,7 +115,8 @@ class MessageQueue
      */
     public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
-        $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, false);
+        $prefix = $this->getPrefix();
+        $this->driver->consumer($consumer, $prefix.$exchangeName, $prefix.$queueName, $routeKey, false);
     }
 
     /**
@@ -125,6 +128,20 @@ class MessageQueue
      */
     public function delayConsumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
-        $this->driver->consumer($consumer, $exchangeName, $queueName, $routeKey, true);
+        $prefix = $this->getPrefix();
+        $this->driver->consumer($consumer, $prefix.$exchangeName, $prefix.$queueName, $routeKey, true);
+    }
+
+    /**
+     * key前缀
+     * @return mixed|string
+     */
+    protected function getPrefix()
+    {
+        $prefix = $this->config['prefix'] ?? '';
+        if ($prefix) {
+            $prefix .= '.';
+        }
+        return $prefix;
     }
 }
