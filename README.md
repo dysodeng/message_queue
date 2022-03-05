@@ -23,13 +23,14 @@ $ php artisan vendor:publish # 选择 Provider: Dy\MessageQueue\ServiceProvider
 ## Usage
 
 消息处理器
+
 ```php
 <?php
 
 use Dy\MessageQueue\Message\Message;
-use Dy\MessageQueue\Message\MessageProcessorInterface;
+use Dy\MessageQueue\Processor\ConsumerProcessor;
 
-class DemoMessageProcessor implements MessageProcessorInterface
+class DemoMessageProcessor implements ConsumerProcessor
 {
     public function handle(Message $message): bool
     {
@@ -38,7 +39,7 @@ class DemoMessageProcessor implements MessageProcessorInterface
     }
 }
 
-class DemoDelayMessageProcessor implements MessageProcessorInterface
+class DemoDelayMessageProcessor implements ConsumerProcessor
 {
     public function handle(Message $message): bool
     {
@@ -77,7 +78,7 @@ return [
 
     'prefix'        =>  '', // key前缀
 
-    'processor'     =>  [ // 实现 Dy\MessageQueue\Message\MessageProcessorInterface 接口的队列消费者处理器，用于对接业务逻辑
+    'processor'     =>  [ // 实现 Dy\MessageQueue\Processor\MessageProcessor 接口的队列消费者处理器，用于对接业务逻辑
         'demo'      =>  DemoMessageProcessor::class,
         'demo.delay'=>  DemoDelayMessageProcessor::class,
     ],

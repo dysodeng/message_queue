@@ -21,7 +21,7 @@ class Log
      * @param string $level
      * @return int
      */
-    public static function getLevel($level = 'debug'): int
+    public static function getLevel(string $level = 'debug'): int
     {
         return self::$levels[$level] ?? self::$levels['debug'];
     }

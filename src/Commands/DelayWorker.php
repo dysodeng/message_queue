@@ -3,7 +3,7 @@ namespace Dy\MessageQueue\Commands;
 
 use Dy\MessageQueue\Facade\MQ;
 use Dy\MessageQueue\Message\Message;
-use Dy\MessageQueue\Message\MessageProcessorInterface;
+use Dy\MessageQueue\Processor\ConsumerProcessor;
 use Illuminate\Console\Command as BaseCommand;
 
 /**
@@ -25,12 +25,12 @@ class DelayWorker extends BaseCommand
     {
         MQ::delayConsumer(function (Message $message) {
             $config = config('message_queue');
-            $processor_list = $config['processor'] ?? [];
-            $processor = $this->option('processor') ?? '';
-            if (isset($processor_list[$processor])) {
-                if ($processor_list[$processor] && class_exists($processor_list[$processor])) {
-                    $ins = new $processor_list[$processor]();
-                    if ($ins instanceof MessageProcessorInterface) {
+            $consumer_list = $config['consumer'] ?? [];
+            $consumer = $this->option('consumer') ?? '';
+            if (isset($consumer_list[$consumer])) {
+                if ($consumer_list[$consumer] && class_exists($consumer_list[$consumer])) {
+                    $ins = new $consumer_list[$consumer]();
+                    if ($ins instanceof ConsumerProcessor) {
                         return $ins->handle($message);
                     }
                 }

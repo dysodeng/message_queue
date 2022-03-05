@@ -257,7 +257,7 @@ class Redis implements DriverInterface
      * @param bool $is_clear
      * @return int
      */
-    private function getRetryCount($mark, $is_clear = false): int
+    private function getRetryCount(string $mark, bool $is_clear = false): int
     {
         $count = 0;
         if (isset($this->retry_message_count[$mark])) {

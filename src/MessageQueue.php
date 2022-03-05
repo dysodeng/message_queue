@@ -13,6 +13,9 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
+/**
+ * 消息队列
+ */
 class MessageQueue
 {
     /**
@@ -84,6 +87,7 @@ class MessageQueue
      * @param string $routeKey      路由key
      * @param string $message       队列消息
      * @return Message
+     * @throws Exception
      */
     public function queue(string $exchangeName, string $queueName, string $routeKey, string $message = ''): Message
     {
@@ -99,6 +103,7 @@ class MessageQueue
      * @param string $message       队列消息
      * @param int $ttl              消息延时时间(秒)
      * @return Message
+     * @throws Exception
      */
     public function delayQueue(string $exchangeName, string $queueName, string $routeKey, string $message, int $ttl): Message
     {
@@ -112,6 +117,8 @@ class MessageQueue
      * @param string $exchangeName  交换机名称
      * @param string $queueName     队列名称
      * @param string $routeKey      路由key
+     * @return void
+     * @throws Exception
      */
     public function consumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
@@ -125,6 +132,8 @@ class MessageQueue
      * @param string $exchangeName  交换机名称
      * @param string $queueName     队列名称
      * @param string $routeKey      路由key
+     * @return void
+     * @throws Exception
      */
     public function delayConsumer(Closure $consumer, string $exchangeName, string $queueName, string $routeKey)
     {
