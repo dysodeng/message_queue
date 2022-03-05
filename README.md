@@ -78,7 +78,7 @@ return [
 
     'prefix'        =>  '', // key前缀
 
-    'processor'     =>  [ // 实现 Dy\MessageQueue\Processor\MessageProcessor 接口的队列消费者处理器，用于对接业务逻辑
+    'processor'     =>  [ // 实现 Dy\MessageQueue\Processor\ConsumerProcessor 接口的队列消息处理器，用于对接业务逻辑
         'demo'      =>  DemoMessageProcessor::class,
         'demo.delay'=>  DemoDelayMessageProcessor::class,
     ],

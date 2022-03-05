@@ -25,7 +25,7 @@ return [
 
     'prefix'        =>  '', // key前缀
 
-    'consumer'      =>  [], // 实现 Dy\MessageQueue\Processor\ConsumerProcessor 接口的队列消费者处理器，用于对接业务逻辑
+    'processor'     =>  [], // 实现 Dy\MessageQueue\Processor\ConsumerProcessor 接口的队列消息处理器，用于对接业务逻辑
 
     'retry'         =>  3,  // 消息失败重试次数
 

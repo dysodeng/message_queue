@@ -25,11 +25,11 @@ class Worker extends BaseCommand
     {
         MQ::consumer(function (Message $message) {
             $config = config('message_queue');
-            $consumer_list = $config['consumer'] ?? [];
-            $consumer = $this->option('consumer') ?? '';
-            if (isset($consumer_list[$consumer])) {
-                if ($consumer_list[$consumer] && class_exists($consumer_list[$consumer])) {
-                    $ins = new $consumer_list[$consumer]();
+            $processor_list = $config['processor'] ?? [];
+            $processor = $this->option('processor') ?? '';
+            if (isset($processor_list[$processor])) {
+                if ($processor_list[$processor] && class_exists($processor_list[$processor])) {
+                    $ins = new $processor_list[$processor]();
                     if ($ins instanceof ConsumerProcessor) {
                         return $ins->handle($message);
                     }
